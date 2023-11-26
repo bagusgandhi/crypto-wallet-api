@@ -10,24 +10,28 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
+model Users {
   id  String  @id @default(uuid())
   username  String @unique
   balance Float @default(0)
-  transactions Ledger[]
+  transactions Transactions[]
   timestamp DateTime  @default(now())      
 
   @@index([username])
 }
 
-model Ledger {
+enum TransactionType {
+  topup
+  transfer
+}
+
+model Transactions {
   id  String  @id @default(uuid())
+  user  Users  @relation(fields: [user_id], references: [id])
   user_id  String
-  user  User  @relation(fields: [user_id], references: [id])
-  transaction_type  String
-  transaction_detail String
+  transaction_type  TransactionType
+  transaction_detail Json? 
   amount  Float
-  add Float
   current_balance Float
   final_balance Float
   timestamp DateTime  @default(now())
