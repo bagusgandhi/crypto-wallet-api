@@ -1,7 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { UserController } from "../user.controller";
 import { JwtStrategy } from "../../auth/jwt/jwt.strategy";
-import { RegisterDto } from "../dto/register-user.dto";
+import { RegisterDto } from "../dto/register.dto";
 import { JwtService } from "@nestjs/jwt";
 import { ConflictException, Logger } from "@nestjs/common";
 import { UserService } from "../user.service";
@@ -26,8 +26,9 @@ describe('UserController', () => {
         it('should register new user and return the token', async () => {
             const registerDto: RegisterDto = { username: 'usertest1129' }
             const expectedToken = 'generated_token';
+            const id = uuidv4();
 
-            jest.spyOn(userService, 'registerUser').mockResolvedValue({ token: expectedToken });
+            jest.spyOn(userService, 'registerUser').mockResolvedValue({ id, username: 'existingUser', balance: 0, timestamp: new Date(), token: expectedToken });
 
             const result = await userController.register(registerDto);
             Logger.debug(result);
