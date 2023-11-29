@@ -77,7 +77,7 @@ export class UserService {
         try {
             const { amount } = topUpDto;
 
-            if (amount < 0 || amount > 10000000) throw new BadRequestException('Invalid topup amount');
+            if (amount <= 0 || amount > 10000000) throw new BadRequestException('Invalid topup amount');
 
             const user = await this.findByUsername(username);
             const newBalance = user.balance + amount;
