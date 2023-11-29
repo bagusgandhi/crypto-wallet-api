@@ -13,7 +13,10 @@ datasource db {
 
 model Users {
   id  String  @id @default(uuid())
+  full_name String
   username  String @unique
+  password String
+  salt String
   balance Float @default(0)
   transactions Transactions[]
   timestamp DateTime  @default(now())      
