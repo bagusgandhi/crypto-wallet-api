@@ -3,7 +3,7 @@ import { PassportStrategy } from "@nestjs/passport";
 import { ExtractJwt, Strategy } from "passport-jwt";
 import { JwtPayload } from "./jwt.interface";
 import { Env } from '../../../common/config/env-loader';
-import { UserService } from "src/modules/user/user.service";
+import { UserService } from "../../../modules/user/user.service";
 
 const { JWT_SECRET } = Env();
 
