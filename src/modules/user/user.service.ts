@@ -11,8 +11,6 @@ import { TransferDto } from './dto/transfer.dto';
 
 @Injectable()
 export class UserService {
-    private readonly logger = new Logger(UserService.name);
-
     constructor(
         private prisma: PrismaService,
         private jwtService: JwtService,
@@ -43,8 +41,6 @@ export class UserService {
             const isUserExist = await this.prisma.users.findUnique({ where: { username: username } });
 
             if (isUserExist) throw new ConflictException('Username already exists');
-
-            this.logger.debug("salt", salt)
 
             const newUser = await this.prisma.users.create({ data: { ...registerDto, salt, password: hashedPassword } });
 
