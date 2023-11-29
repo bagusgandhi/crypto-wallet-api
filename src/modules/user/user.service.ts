@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, HttpException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, HttpException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Users } from '@prisma/client';
 import { JwtService } from '@nestjs/jwt';
 import { TransactionType } from '../../common/enum/transaction-type.enum';
@@ -11,6 +11,8 @@ import { TransferDto } from './dto/transfer.dto';
 
 @Injectable()
 export class UserService {
+    private readonly logger = new Logger(UserService.name);
+
     constructor(
         private prisma: PrismaService,
         private jwtService: JwtService,
@@ -35,31 +37,19 @@ export class UserService {
         return null;
     }
 
-    async create(registerDto: RegisterDto) {
+    async create(registerDto: RegisterDto, salt: string, hashedPassword: string) {
         try {
             const { username } = registerDto;
             const isUserExist = await this.prisma.users.findUnique({ where: { username: username } });
 
             if (isUserExist) throw new ConflictException('Username already exists');
 
-            const newUser = await this.prisma.users.create({ data: registerDto });
+            this.logger.debug("salt", salt)
+
+            const newUser = await this.prisma.users.create({ data: { ...registerDto, salt, password: hashedPassword } });
 
             return newUser;
 
-        } catch (error) {
-            throw new HttpException(error.message, error.status);
-        }
-    }
-
-    async registerUser(registerDto: RegisterDto) {
-        try {
-            const { username } = registerDto;
-            const user = await this.create(registerDto);
-
-            const payload: JwtPayload = { username }
-            const token = this.jwtService.sign(payload);
-
-            return { ...user, token }
         } catch (error) {
             throw new HttpException(error.message, error.status);
         }
