@@ -15,6 +15,15 @@ export class UserController {
 
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
+    @Get('profile')
+    async getProfile(@GetUser() user: Users ){
+        const { username } = user;
+        const result = await this.userService.findByUsername(username);
+        return { full_name: result.full_name, username: result.username, balance: result.balance }
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
     @Get('balance')
     async getBalance(@GetUser() user: Users ){
         const { username } = user;
