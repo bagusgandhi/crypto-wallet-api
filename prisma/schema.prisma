@@ -39,4 +39,7 @@ model Transactions {
   current_balance Float
   final_balance Float
   timestamp DateTime  @default(now())
+  truncated_timestamp DateTime @default(now())
+
+  @@index([timestamp, truncated_timestamp, user_id, amount, transaction_type])
 }
