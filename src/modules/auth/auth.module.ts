@@ -5,6 +5,8 @@ import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt/jwt.strategy';
 import { Env } from '../../common/config/env-loader';
 import { PrismaModule } from '../../common/database/prisma.module';
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
 
 const { JWT_SECRET } = Env();
 
@@ -20,7 +22,8 @@ const { JWT_SECRET } = Env();
     PrismaModule,
     forwardRef(() => UserModule)
   ],
-  providers: [ JwtStrategy ],
+  providers: [ JwtStrategy, AuthService ],
   exports: [JwtModule, JwtStrategy, PassportModule],
+  controllers: [AuthController],
 })
 export class AuthModule { }
