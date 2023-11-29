@@ -13,12 +13,6 @@ import { ApiBearerAuth, ApiBody, ApiResponse, ApiTags } from '@nestjs/swagger';
 export class UserController {
     constructor(private readonly userService: UserService){}
 
-    @ApiBody({ type: RegisterDto })
-    @Post()
-    async register(@Body() registerDto: RegisterDto){
-        return await this.userService.registerUser(registerDto)
-    }
-
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
     @Get('balance')
