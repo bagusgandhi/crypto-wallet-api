@@ -113,8 +113,6 @@ export class TransactionsService {
         try {
             const { user_id, from, to, transaction_type, limit, page } = queryTransactionDto;
 
-            console.log(limit, page)
-
             const totalCount = await this.prisma.transactions.count({
                 where: {
                     timestamp: {

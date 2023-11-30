@@ -30,7 +30,7 @@ export class TransactionsController {
     @ApiQuery({ name: 'transaction_type', type: String, example: 'topup', required: false })
     @ApiQuery({ name: 'from', type: String, example: '2023-10-20', required: false })
     @ApiQuery({ name: 'to', type: String, example: '2023-10-30', required: false })
-    @ApiQuery({ name: 'id', type: String, example: 'uuid', required: false })
+    @ApiQuery({ name: 'user_id', type: String, example: 'uuid', required: false })
     @Get('report')
     async getAllTransaction(@Query() queryTransactionReportDto: QueryTransactionReportDto) {
         return await this.transactionService.getAllTransactionsSeries(queryTransactionReportDto);
@@ -45,7 +45,6 @@ export class TransactionsController {
     @Get('log')
     @Get('log')
     async getAllTransactionLogs(@Query() queryTransactionLogDto: QueryTransactionLogDto) {
-        console.log(queryTransactionLogDto.limit, queryTransactionLogDto.page)
         const { limit = 10, page = 1, ...rest } = queryTransactionLogDto;
         const updatedDto = { ...rest, limit, page };
         return await this.transactionService.getAllTransactionLog(updatedDto);
