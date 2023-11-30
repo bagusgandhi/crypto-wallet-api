@@ -70,10 +70,10 @@ export class TransactionsService {
                     ...(from || to || transaction_type || user_id
                         ? {
                             truncated_timestamp: {
-                                gte: from ? new Date(from) : null,
-                                lte: to ? new Date(to) : null,
+                                gte: from ? new Date(from) : undefined,
+                                lte: to ? new Date(to) : undefined,
                             },
-                            transaction_type: transaction_type as TransactionType || undefined,
+                            transaction_type: transaction_type ? transaction_type as TransactionType : undefined,
                             user_id: user_id || undefined
                         } : {}
                     )
@@ -135,7 +135,8 @@ export class TransactionsService {
                     user: {
                         select: {
                             username: true,
-                            id: true
+                            id: true,
+                            full_name: true
                         },
                     },
                 },
