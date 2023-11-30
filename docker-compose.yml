@@ -19,6 +19,7 @@ services:
     container_name: crypto-wallet-api
     build:
       context: .
+    restart: unless-stopped
     depends_on:
       - crypto-wallet-db
     ports:
