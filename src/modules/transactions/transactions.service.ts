@@ -80,18 +80,23 @@ export class TransactionsService {
                 },
                 _sum: {
                     amount: true
-                }
+                },
+                _max: {
+                    timestamp: true
+                },
             });
 
             const transfer = [];
             const topup = [];
 
+            console.log(data)
+
             if (data) {
                 data.map((transaction) => {
                     if( transaction.transaction_type === "transfer" ) {
-                        transfer.push([Math.abs(transaction._sum?.amount), transaction.truncated_timestamp])
+                        transfer.push([Math.abs(transaction._sum?.amount), transaction._max.timestamp])
                     } else {
-                        topup.push([transaction._sum?.amount, transaction.truncated_timestamp])
+                        topup.push([transaction._sum?.amount, transaction._max.timestamp])
                     }
                 })
 
