@@ -64,39 +64,36 @@ export class TransactionsService {
     async getAllTransactionsSeries(queryTransactionDto: QueryTransactionReportDto) {
         try {
             const { user_id, from, to, transaction_type } = queryTransactionDto;
-            const data = await this.prisma.transactions.groupBy({
-                by: ['truncated_timestamp', 'transaction_type'],
+            const data = await this.prisma.transactions.findMany({
                 where: {
-                    ...(from || to || transaction_type || user_id
-                        ? {
-                            truncated_timestamp: {
-                                gte: from ? new Date(from) : undefined,
-                                lte: to ? new Date(to) : undefined,
-                            },
-                            transaction_type: transaction_type ? transaction_type as TransactionType : undefined,
-                            user_id: user_id || undefined
-                        } : {}
-                    )
+                  ...(from || to || transaction_type || user_id
+                    ? {
+                        truncated_timestamp: {
+                          gte: from ? new Date(from) : undefined,
+                          lte: to ? new Date(to) : undefined,
+                        },
+                        transaction_type: transaction_type ? transaction_type as TransactionType : undefined,
+                        user_id: user_id || undefined,
+                      }
+                    : {}),
                 },
-                _sum: {
-                    amount: true
+                select: {
+                  truncated_timestamp: true,
+                  transaction_type: true,
+                  amount: true,
+                  timestamp: true,
                 },
-                _max: {
-                    timestamp: true
-                },
-            });
+              });
 
             const transfer = [];
             const topup = [];
 
-            console.log(data)
-
             if (data) {
                 data.map((transaction) => {
                     if( transaction.transaction_type === "transfer" ) {
-                        transfer.push([Math.abs(transaction._sum?.amount), transaction._max.timestamp])
+                        transfer.push([Math.abs(transaction.amount), transaction.timestamp])
                     } else {
-                        topup.push([transaction._sum?.amount, transaction._max.timestamp])
+                        topup.push([transaction.amount, transaction.timestamp])
                     }
                 })
 
