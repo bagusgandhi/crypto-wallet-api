@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt/jwt.guard';
 import { TransactionsService } from './transactions.service';
 import { GetUser } from '../../common/decorators/get-user.decorator';
@@ -6,10 +6,13 @@ import { Users } from '@prisma/client';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { QueryTransactionLogDto } from './dto/query-log.dto';
 import { QueryTransactionReportDto } from './dto/query-report.dto';
+import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
 
 @ApiTags('Transactions')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
+@CacheTTL(60)
+@UseInterceptors(CacheInterceptor)
 @Controller('transactions')
 export class TransactionsController {
     constructor(
@@ -21,6 +24,7 @@ export class TransactionsController {
         const { id } = user;
         return await this.transactionService.getTransactionByUser(id)
     }
+
 
     @Get('top_users')
     async getTopTransaction() {
@@ -42,7 +46,6 @@ export class TransactionsController {
     @ApiQuery({ name: 'user_id', type: String, example: 'uuid', required: false })
     @ApiQuery({ name: 'limit', type: Number, example: 10, required: false })
     @ApiQuery({ name: 'page', type: Number, example: 1, required: false })
-    @Get('log')
     @Get('log')
     async getAllTransactionLogs(@Query() queryTransactionLogDto: QueryTransactionLogDto) {
         const { limit = 10, page = 1, ...rest } = queryTransactionLogDto;
