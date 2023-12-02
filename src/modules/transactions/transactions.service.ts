@@ -122,6 +122,7 @@ export class TransactionsService {
                         lte: to ? new Date(to) : undefined,
                     },
                     transaction_type: transaction_type as TransactionType || undefined,
+                    user_id: user_id || undefined
                 },
             });
 
