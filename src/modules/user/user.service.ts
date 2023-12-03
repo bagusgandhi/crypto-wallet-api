@@ -1,10 +1,8 @@
-import { BadRequestException, ConflictException, HttpException, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { Users } from '@prisma/client';
-import { JwtService } from '@nestjs/jwt';
+import { BadRequestException, ConflictException, HttpException, HttpStatus, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Prisma, Users } from '@prisma/client';
 import { TransactionType } from '../../common/enum/transaction-type.enum';
-import { PrismaService } from '../../common/database/prisma.service';
+import { PrismaService } from 'nestjs-prisma';
 import { RegisterDto } from './dto/register.dto';
-import { JwtPayload } from '../auth/jwt/jwt.interface';
 import { TopUpDto } from './dto/topup.dto';
 import { TransactionsService } from '../transactions/transactions.service';
 import { TransferDto } from './dto/transfer.dto';
@@ -13,7 +11,6 @@ import { TransferDto } from './dto/transfer.dto';
 export class UserService {
     constructor(
         private prisma: PrismaService,
-        private jwtService: JwtService,
         private readonly transactionsService: TransactionsService
     ) { }
 
@@ -24,7 +21,11 @@ export class UserService {
 
             return user;
         } catch (error) {
-            throw new HttpException(error.message, error.status);
+            if (error instanceof Prisma.PrismaClientKnownRequestError) {
+                throw new HttpException('Internal server error', HttpStatus.INTERNAL_SERVER_ERROR);
+            } else {
+                throw new HttpException(error.message, error.status);
+            }
         }
     }
 
@@ -47,7 +48,11 @@ export class UserService {
             return newUser;
 
         } catch (error) {
-            throw new HttpException(error.message, error.status);
+            if (error instanceof Prisma.PrismaClientKnownRequestError) {
+                throw new HttpException('Internal server error', HttpStatus.INTERNAL_SERVER_ERROR);
+            } else {
+                throw new HttpException(error.message, error.status);
+            }
         }
     }
 
@@ -69,7 +74,11 @@ export class UserService {
 
             return updateUser;
         } catch (error) {
-            throw new HttpException(error.message, error.status);
+            if (error instanceof Prisma.PrismaClientKnownRequestError) {
+                throw new HttpException('Internal server error', HttpStatus.INTERNAL_SERVER_ERROR);
+            } else {
+                throw new HttpException(error.message, error.status);
+            }
         }
     }
 
@@ -94,7 +103,11 @@ export class UserService {
             await this.transactionsService.create(transactionData)
 
         } catch (error) {
-            throw new HttpException(error.message, error.status);
+            if (error instanceof Prisma.PrismaClientKnownRequestError) {
+                throw new HttpException('Internal server error', HttpStatus.INTERNAL_SERVER_ERROR);
+            } else {
+                throw new HttpException(error.message, error.status);
+            }
         }
     }
 
@@ -128,7 +141,11 @@ export class UserService {
             await this.transactionsService.create(transactionData);
 
         } catch (error) {
-            throw new HttpException(error.message, error.status);
+            if (error instanceof Prisma.PrismaClientKnownRequestError) {
+                throw new HttpException('Internal server error', HttpStatus.INTERNAL_SERVER_ERROR);
+            } else {
+                throw new HttpException(error.message, error.status);
+            }
         }
     }
 
