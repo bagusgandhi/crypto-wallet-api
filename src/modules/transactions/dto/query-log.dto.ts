@@ -16,6 +16,14 @@ export class QueryTransactionLogDto {
     @IsOptional()
     to: string;
 
+    @IsString()
+    @IsOptional()
+    cursor: string;
+
+    @IsString()
+    @IsOptional()
+    username: string;
+
     @IsEnum(TransactionType)
     @IsOptional()
     transaction_type: string;
