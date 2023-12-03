@@ -46,6 +46,8 @@ export class TransactionsController {
     @ApiQuery({ name: 'user_id', type: String, example: 'uuid', required: false })
     @ApiQuery({ name: 'limit', type: Number, example: 10, required: false })
     @ApiQuery({ name: 'page', type: Number, example: 1, required: false })
+    @ApiQuery({ name: 'cursor', type: String, example: '2023-12-02T07:40:02.248Z', required: false })
+    @ApiQuery({ name: 'username', type: String, example: 'johndoe', required: false })
     @Get('log')
     async getAllTransactionLogs(@Query() queryTransactionLogDto: QueryTransactionLogDto) {
         const { limit = 10, page = 1, ...rest } = queryTransactionLogDto;
