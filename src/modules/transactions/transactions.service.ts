@@ -1,9 +1,10 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
-import { PrismaService } from '../../common/database/prisma.service';
 import { QueryTransactionLogDto } from './dto/query-log.dto';
 import { TransactionType } from 'src/common/enum/transaction-type.enum';
 import { QueryTransactionReportDto } from './dto/query-report.dto';
+import { Prisma } from '@prisma/client';
+import { PrismaService } from 'nestjs-prisma';
 
 @Injectable()
 export class TransactionsService {
@@ -32,7 +33,11 @@ export class TransactionsService {
             return createdTransaction;
 
         } catch (error) {
-            throw new HttpException(error.message, error.status);
+            if (error instanceof Prisma.PrismaClientKnownRequestError) {
+                throw new HttpException('Internal server error', HttpStatus.INTERNAL_SERVER_ERROR);
+            } else {
+                throw new HttpException(error.message, error.status);
+            }
         }
     }
 
@@ -45,7 +50,11 @@ export class TransactionsService {
             return transactions;
 
         } catch (error) {
-            throw new HttpException('Internal server error', HttpStatus.INTERNAL_SERVER_ERROR);
+            if (error instanceof Prisma.PrismaClientKnownRequestError) {
+                throw new HttpException('Internal server error', HttpStatus.INTERNAL_SERVER_ERROR);
+            } else {
+                throw new HttpException(error.message, error.status);
+            }
         }
     }
 
@@ -57,33 +66,44 @@ export class TransactionsService {
             return topTransactions;
 
         } catch (error) {
-            throw new HttpException('Internal server error', HttpStatus.INTERNAL_SERVER_ERROR);
+            if (error instanceof Prisma.PrismaClientKnownRequestError) {
+                throw new HttpException('Internal server error', HttpStatus.INTERNAL_SERVER_ERROR);
+            } else {
+                throw new HttpException(error.message, error.status);
+            }
         }
     }
 
     async getAllTransactionsSeries(queryTransactionDto: QueryTransactionReportDto) {
         try {
             const { user_id, from, to, transaction_type } = queryTransactionDto;
-            const data = await this.prisma.transactions.findMany({
+            const data = await this.prisma.transactions.groupBy({
+                by: ['truncated_timestamp', 'transaction_type'],
                 where: {
-                  ...(from || to || transaction_type || user_id
-                    ? {
-                        truncated_timestamp: {
-                          gte: from ? new Date(from) : undefined,
-                          lte: to ? new Date(to) : undefined,
-                        },
-                        transaction_type: transaction_type ? transaction_type as TransactionType : undefined,
-                        user_id: user_id || undefined,
-                      }
-                    : {}),
+                    ...(from || to || transaction_type || user_id
+                        ? {
+                            truncated_timestamp: {
+                                gte: from ? new Date(from) : undefined,
+                                lte: to ? new Date(to) : undefined,
+                            },
+                            transaction_type: transaction_type ? transaction_type as TransactionType : undefined,
+                            user_id: user_id || undefined
+                        } : {}
+                    )
                 },
-                select: {
-                  truncated_timestamp: true,
-                  transaction_type: true,
-                  amount: true,
-                  timestamp: true,
+                _sum: {
+                    amount: true
                 },
-              });
+                _max: {
+                    timestamp: true
+                },
+                _min: {
+                    timestamp: true
+                },
+                orderBy: {
+                    truncated_timestamp: 'asc',
+                },
+            });
 
             const transfer = [];
             const topup = [];
@@ -91,9 +111,9 @@ export class TransactionsService {
             if (data) {
                 data.map((transaction) => {
                     if( transaction.transaction_type === "transfer" ) {
-                        transfer.push([Math.abs(transaction.amount), transaction.timestamp])
+                        transfer.push([Math.abs(transaction._sum?.amount), transaction._min.timestamp])
                     } else {
-                        topup.push([transaction.amount, transaction.timestamp])
+                        topup.push([transaction._sum?.amount, transaction._max.timestamp])
                     }
                 })
 
@@ -104,7 +124,6 @@ export class TransactionsService {
                     ]
                 }
             }
-
             return data;
         } catch (error) {
             throw new HttpException(error.message, error.status);
@@ -113,20 +132,7 @@ export class TransactionsService {
 
     async getAllTransactionLog(queryTransactionDto: QueryTransactionLogDto) {
         try {
-            const { user_id, from, to, transaction_type, limit, page } = queryTransactionDto;
-
-            const totalCount = await this.prisma.transactions.count({
-                where: {
-                    timestamp: {
-                        gte: from ? new Date(from) : undefined,
-                        lte: to ? new Date(to) : undefined,
-                    },
-                    transaction_type: transaction_type as TransactionType || undefined,
-                    user_id: user_id || undefined
-                },
-            });
-
-            const totalPages = Math.ceil(totalCount / limit);
+            const { user_id, from, to, transaction_type, limit, cursor, username } = queryTransactionDto;
 
             const transactionsLog = await this.prisma.transactions.findMany({
                 select: {
@@ -145,23 +151,31 @@ export class TransactionsService {
                 },
                 where: {
                     timestamp: {
-                        gte: from ? new Date(from) : undefined,
-                        lte: to ? new Date(to) : undefined,
+                        gt: from ? new Date(from) : undefined,
+                        lt: to ? new Date(to + 'T23:59:59.999Z') : undefined,
                     },
                     transaction_type: transaction_type as TransactionType || undefined,
-                    user_id: user_id || undefined
+                    user_id: user_id || undefined,
+                    user: {
+                        username: username ? { contains: username } : undefined
+                    },
+                    AND: cursor ? { timestamp: { lt: new Date(cursor) } } : undefined
                 },
                 orderBy: {
                     timestamp: 'desc'
                 },
-                skip: (page - 1) * limit,
                 take: limit
             });
+
             const data = transactionsLog.map((data) => ({ ...data, key: data.id }))
-            return { data, total_pages: totalPages, };
+            return { data };
 
         } catch (error) {
-            throw new HttpException(error.message, error.status);
+            if (error instanceof Prisma.PrismaClientKnownRequestError) {
+                throw new HttpException('Internal server error', HttpStatus.INTERNAL_SERVER_ERROR);
+            } else {
+                throw new HttpException(error.message, error.status);
+            }
         }
     }
 }
